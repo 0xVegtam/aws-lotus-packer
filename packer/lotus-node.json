@@ -1,0 +1,54 @@
+{
+  "variables": {
+    "profile": "default",
+    "build_region" : "us-east-1",
+    "node_version": "v0.5.10",
+    "instance": "g4dn.8xlarge"
+  },
+  "description": "Filecoin Lotus Node V{{user `node_version`}} with 32GB config prefetched",
+  "builders": [
+    {
+      "type": "amazon-ebs",
+      "region" : "{{user `build_region`}}",
+      "source_ami" : "ami-0655fd1712db8e19f",
+      "ssh_username": "ubuntu",
+      "ssh_timeout": "1h",
+      "instance_type": "{{user `instance`}}",
+      "force_deregister": "true",
+      "force_delete_snapshot": "true",
+      "ami_name": "filecoin-lotus-base-{{user `node_version`}}-{{user `instance`}}",
+      "ami_description" : "Lotus Node {{user `node_version`}} for use on {{user `instance`}} based on the AWS Deeplearning Ubuntu 18.04 AMI with 32GB config prefetched.",
+      "launch_block_device_mappings": [
+       {
+         "device_name": "/dev/sda1",
+         "volume_size": 1000,
+         "volume_type": "gp2",
+         "delete_on_termination": true
+       }
+     ],
+      "tags" : {
+          "BuiltAt" : "{{timestamp}}",
+          "Lotus_Version": "{{user `node_version`}}"
+      },
+      "run_tags" : {
+          "Name" : "packer-builder",
+          "Tool" : "Packer"
+      }
+    }
+  ],
+  "provisioners" : [
+    {
+     "type": "shell",
+     "inline": [
+       "sleep 80"
+     ]
+   },
+    {
+        "type" : "shell",
+        "environment_vars": [
+          "LOTUS_VERSION={{user `node_version`}}"
+        ],
+        "script" : "configScripts/base-setup.sh"
+    }
+  ]
+}
